@@ -27,6 +27,6 @@ Vaccin covid trouvé à [**{}**](https://www.doctolib.fr{})
         if conf.DEBUGGING:
             msg+="""\n```{}```""".format(data)
         try:
-            requests.post("http://127.0.0.1:"+str(conf.BOT_PORT), data={"msg":msg})
+            requests.post("http://127.0.0.1:"+str(conf.BOT_PORT), data={"txt":msg})
         except requests.exceptions.ConnectionError:
             print(msg)
