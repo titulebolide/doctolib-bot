@@ -6,7 +6,6 @@ Nécessite python 3, et pip.
 ## Installation
 
 ```
-setup.sh
 pip install -r requirements.txt
 ```
 
