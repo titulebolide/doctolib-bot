@@ -1,4 +1,2 @@
 click>=7.1.2
-py-notifier
-
-
+py-notifier>=0.3.0
