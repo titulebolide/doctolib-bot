@@ -17,6 +17,7 @@ python doctolib.py --location lyon --max-page 3
 python doctolib.py --location pornichet --max-page 5 --forever --interval 10
 ```
 
+```bash
 Toutles les options:
   --location TEXT           La ville autour de laquelle rechercher
   --max-page INTEGER        Nombre de page à scanner sur Doctolib
@@ -34,3 +35,4 @@ Toutles les options:
                             un créneau est trouvé. Défaut : Vrai
 
   --help                    Pour retrouver cette documentation
+```
