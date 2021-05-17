@@ -9,6 +9,11 @@ pip install -r requirements.txt
 ```
 
 ## Utilisation
+Si vous utilisez windows et voulez avoir une notification quand un nouveau créneau est disponible utilisez
+```
+python main_win10.py --location lyon --max-page 3
+```
+Sinon utilisez
 ```
 python main.py --location lyon --max-page 3
 ```
