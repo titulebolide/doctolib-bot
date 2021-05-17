@@ -1,4 +1,4 @@
 click>=7.1.2
-win10toast
+py-notifier
 
 

@@ -4,16 +4,14 @@ Cherche sur Doctolib les rendez-vous disponibles pour les +18 ans sans comorbidi
 Nécessite python 3, et pip.
 
 ## Installation
+
 ```
+setup.sh
 pip install -r requirements.txt
 ```
 
 ## Utilisation
-Si vous utilisez windows et voulez avoir une notification quand un nouveau créneau est disponible utilisez
-```
-python main_win10.py --location lyon --max-page 3
-```
-Sinon utilisez
+Utilisez la commande
 ```
 python main.py --location lyon --max-page 3
 ```
