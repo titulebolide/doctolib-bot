@@ -2,11 +2,13 @@ import requests
 import re
 import click
 from progress.bar import Bar
+from pynotifier import Notification
 
-@click.command()
-@click.option('--location', default='paris', help="La ville autour de laquelle rechercher")
-@click.option('--max-page', default=2, help="Nombre de page à scanner sur Doctolib")
-def main(location, max_page):
+
+
+
+def search(location, max_page):
+    res = []
     """
     Cherche sur Doctolib les rendez-vous disponibles pour les +18 ans sans comorbidités dans les 24 heures à venir.
     """
@@ -31,8 +33,34 @@ def main(location, max_page):
                 data['search_result']['name_with_title'],
                 data['search_result']['link']
             ))
+            res.append("\nVaccin covid trouvé à {} : https://www.doctolib.fr{}".format(
+                data['search_result']['name_with_title'],
+                data['search_result']['link']
+            ))
         bar.next()
     bar.finish()
+    return res
+
+
+@click.command()
+@click.option('--location', default='paris', help="La ville autour de laquelle rechercher")
+@click.option('--max-page', default=2, help="Nombre de page à scanner sur Doctolib")
+def main(location, max_page):
+    res = search(location, max_page)
+    new_res = []
+    while 1==1:
+        new_res = search(location, max_page)
+        for i in new_res:
+            if i not in res:
+                Notification(
+                    title="Nouvelles doses disponibles !",
+                    description="Vite ! Allez sur doctolib",
+                    duration=5,
+                    urgency='normal'
+                ).send()
+                break
+        res = new_res[::]
+
 
 if __name__ == "__main__":
     main()

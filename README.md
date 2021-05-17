@@ -4,11 +4,14 @@ Cherche sur Doctolib les rendez-vous disponibles pour les +18 ans sans comorbidi
 Nécessite python 3, et pip.
 
 ## Installation
+
 ```
+setup.sh
 pip install -r requirements.txt
 ```
 
 ## Utilisation
+Utilisez la commande
 ```
 python main.py --location lyon --max-page 3
 ```
