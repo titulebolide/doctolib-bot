@@ -6,30 +6,59 @@ import click
 from progress.bar import Bar
 from pynotifier import Notification
 import time
+import asyncio
+import concurrent.futures
+import threading
 
+class BarThread():
+    def __init__(self, *args, **kwargs):
+        self.bar=Bar(*args, **kwargs)
+        self.lock = threading.Lock()
+    def finish(self):
+        self.bar.finish()
+    def next(self):
+        self.lock.acquire()
+        self.bar.next()
+        self.lock.release()
+
+def fetch_page(page, location, bar, ids):
+    s = requests.get(
+        "https://www.doctolib.fr/vaccination-covid-19/{}?force_max_limit=2&ref_visit_motive_ids[]=6970&ref_visit_motive_ids[]=7005&page={}".format(location,page),
+        timeout=20
+    )
+    ids_raw = re.findall(r'id="search-result-\d+', s.text)
+    ids_raw = [int(id.replace('id="search-result-', "")) for id in ids_raw]
+    bar.next()
+    ids.extend(ids_raw)
+
+def fetch_id(id, bar, datas):
+    data = requests.get(
+        "https://www.doctolib.fr/search_results/{}.json?force_max_limit=2&ref_visit_motive_ids[]=6970&ref_visit_motive_ids[]=7005".format(id),
+        timeout=20
+    ).json()
+    bar.next()
+    datas.append(data)
 
 def get_availabilities(location, max_page):
+    bar = BarThread('1/2 - Chargement des identifiants', max=max_page)
     ids = []
-    bar = Bar('1/2 - Chargement des identifiants', max=max_page)
-    for page in range(1, max_page+1):
-        s = requests.get(
-            "https://www.doctolib.fr/vaccination-covid-19/{}?force_max_limit=2&ref_visit_motive_ids[]=6970&ref_visit_motive_ids[]=7005&page={}".format(location,page)
-        )
-        ids_raw = re.findall(r'id="search-result-\d+', s.text)
-        ids.extend([int(id.replace('id="search-result-', "")) for id in ids_raw])
-        bar.next()
+    threads = [threading.Thread(target=fetch_page, args=(page, location, bar, ids)) for page in range(1, max_page+1)]
+    for t in threads: t.start()
+    for t in threads: t.join()
     bar.finish()
 
-    bar = Bar('2/2 - Verification des disponibilités', max=len(ids))
+    bar = BarThread('2/2 - Verification des disponibilités', max=len(ids))
+
+    datas = []
+    threads = [threading.Thread(target=fetch_id, args=(id, bar, datas)) for id in ids]
+    for t in threads: t.start()
+    for t in threads: t.join()
+    bar.finish()
+
     availables = []
-    for id in ids:
-        data = requests.get(
-            "https://www.doctolib.fr/search_results/{}.json?force_max_limit=2&ref_visit_motive_ids[]=6970&ref_visit_motive_ids[]=7005".format(id)
-        ).json()
+    for data in datas:
         if data['total'] > 0:
             availables.append(data)
-        bar.next()
-    bar.finish()
     return availables
 
 
@@ -51,15 +80,10 @@ def output_data(availabilities, type_ouput):
                     availability['search_result']['name_with_title'],
                     availability['search_result']['link']
                 ))
+        else:
+            click.echo("\nPas de rendez-vous trouvé")
 
-
-@click.command()
-@click.option('--location', default='paris', help="La ville autour de laquelle rechercher")
-@click.option('--max-page', default=2, help="Nombre de page à scanner sur Doctolib")
-@click.option('--quiet/--no-quiet', default=False, help="Désactive le logging. Défaut : Faux")
-@click.option('--forever/--no-forever', default=False, help="Si le programme doit s'executer indéfiniment ou chercher une seule fois. Défaut : Vrai")
-@click.option('--interval', default=5, help="Intervalle en minutes entre chaque rafraichissements si --forever est utilisé. Attention de ne pas mettre trop court, on ne sait pas si doctolib fait des bans. Défaut : 5.")
-@click.option('--notify/--no-notify', default=True, help="Si le programme doit afficher une notification si un créneau est trouvé. Défaut : Vrai")
+            
 def main(location, max_page, quiet, forever, interval, notify):
     """
     Cherche sur Doctolib les rendez-vous disponibles pour les +18 ans sans comorbidités dans les 24 heures à venir.
@@ -79,5 +103,15 @@ def main(location, max_page, quiet, forever, interval, notify):
 
     return availabilities
 
+@click.command()
+@click.option('--location', default='paris', help="La ville autour de laquelle rechercher")
+@click.option('--max-page', default=2, help="Nombre de page à scanner sur Doctolib")
+@click.option('--quiet/--no-quiet', default=False, help="Désactive le logging. Défaut : Faux")
+@click.option('--forever/--no-forever', default=False, help="Si le programme doit s'executer indéfiniment ou chercher une seule fois. Défaut : Vrai")
+@click.option('--interval', default=5, help="Intervalle en minutes entre chaque rafraichissements si --forever est utilisé. Attention de ne pas mettre trop court, on ne sait pas si doctolib fait des bans. Défaut : 5.")
+@click.option('--notify/--no-notify', default=True, help="Si le programme doit afficher une notification si un créneau est trouvé. Défaut : Vrai")
+def main_sync(**kwargs):
+    main(**kwargs)
+
 if __name__ == "__main__":
-    main()
+    main_sync()
