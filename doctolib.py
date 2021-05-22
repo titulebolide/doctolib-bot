@@ -33,8 +33,11 @@ def fetch_page(page, location, bar, ids):
 
 def fetch_id(id, bar, datas):
     data = requests.get(
-        "https://www.doctolib.fr/search_results/{}.json?force_max_limit=2&ref_visit_motive_ids[]=6970&ref_visit_motive_ids[]=7005".format(id),
-        timeout=20
+        "https://www.doctolib.fr/search_results/{}.json?force_max_limit=2&search_result_format=json&ref_visit_motive_ids[]=6970&ref_visit_motive_ids[]=7005".format(id),
+        timeout=20,
+        headers={
+            'User-Agent' : "Mozilla"
+        }
     ).json()
     bar.next()
     datas.append(data)
@@ -83,7 +86,7 @@ def output_data(availabilities, type_ouput):
         else:
             click.echo("\nPas de rendez-vous trouvé")
 
-            
+
 def main(location, max_page, quiet, forever, interval, notify):
     """
     Cherche sur Doctolib les rendez-vous disponibles pour les +18 ans sans comorbidités dans les 24 heures à venir.
