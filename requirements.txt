@@ -1,3 +1,4 @@
 click>=7.1.2
 py-notifier>=0.3.0
 progress>=1.5
+requests>=2.25.1
