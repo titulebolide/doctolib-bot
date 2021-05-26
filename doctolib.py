@@ -9,6 +9,7 @@ import time
 import asyncio
 import concurrent.futures
 import threading
+import webbrowser
 
 class BarThread():
     def __init__(self, *args, **kwargs):
@@ -83,17 +84,26 @@ def output_data(availabilities, type_ouput):
                     availability['search_result']['name_with_title'],
                     availability['search_result']['link']
                 ))
+                if 'webbrowser' in type_ouput:
+                    try:
+                        webbrowser.open("https://www.doctolib.fr{}".format(availability['search_result']['link']))
+                    except:
+                        if not 'webbrowser_error_printed' in type_ouput:
+                            print("Desole, on ne peut pas ouvrir le lien dans le navigateur.")
+                            type_ouput.append('webbrowser_error_printed')
+
         else:
             click.echo("\nPas de rendez-vous trouvé")
 
 
-def main(location, max_page, quiet, forever, interval, notify):
+def main(location, max_page, quiet, forever, interval, notify, browser):
     """
     Cherche sur Doctolib les rendez-vous disponibles pour les +18 ans sans comorbidités dans les 24 heures à venir.
     """
     type_ouput = []
     if notify: type_ouput.append('notification')
     if not quiet: type_ouput.append('logging')
+    if browser: type_ouput.append('webbrowser')
 
     if forever:
         while True:
@@ -113,6 +123,7 @@ def main(location, max_page, quiet, forever, interval, notify):
 @click.option('--forever/--no-forever', default=False, help="Si le programme doit s'executer indéfiniment ou chercher une seule fois. Défaut : Vrai")
 @click.option('--interval', default=5, help="Intervalle en minutes entre chaque rafraichissements si --forever est utilisé. Attention de ne pas mettre trop court, on ne sait pas si doctolib fait des bans. Défaut : 5.")
 @click.option('--notify/--no-notify', default=True, help="Si le programme doit afficher une notification si un créneau est trouvé. Défaut : Vrai")
+@click.option('--browser/--no-browser', default=False, help="Si vous voulez ouvrir les liens trouvés directement dans un navigateur. Défaut : Faux")
 def main_sync(**kwargs):
     main(**kwargs)
 
